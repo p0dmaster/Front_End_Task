@@ -23,6 +23,10 @@ ul.reset ul li {
    list-style-type: none;
 }
 
+.chat {
+  position: relative;
+}
+
 .chat-gates {
   display: grid;
   height: 100vh;
@@ -150,4 +154,13 @@ ul.reset ul li {
 
 .send__button {
   margin-right: 0;
+}
+
+/* Emoji-picker css */
+
+.chat em-emoji-picker {
+  position: absolute;
+  bottom: 18%; /* Adjust this value to move the picker higher or lower */
+  right: 3%; /* Adjust this value to align picker horizontally */
+  height: 400px;
 }
