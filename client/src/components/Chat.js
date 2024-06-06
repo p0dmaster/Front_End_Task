@@ -2,9 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { w3cwebsocket as Socket } from 'websocket';
 import Picker from '@emoji-mart/react';
 import data from '@emoji-mart/data';
-import { init, SearchIndex } from 'emoji-mart';
+import emojiData from 'emoji-datasource/emoji.json';
 
 const client = new Socket('ws://127.0.0.1:8000');
+
+// Create a mapping from shortcodes to emoji characters
+const createEmojiMap = () => {
+  const emojiMap = {};
+  emojiData.forEach((emoji) => {
+    emoji.short_names.forEach((shortName) => {
+      emojiMap[shortName] = String.fromCodePoint(
+        ...emoji.unified.split('-').map((code) => parseInt(code, 16))
+      );
+    });
+  });
+  return emojiMap;
+};
+
+const emojiMap = createEmojiMap();
 
 const Chat = ({ userName }) => {
   const [myMessage, setMyMessage] = useState('');
@@ -12,8 +27,6 @@ const Chat = ({ userName }) => {
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
 
   useEffect(() => {
-    init({ data });
-
     client.onopen = () => {
       console.log('WebSocket Client Connected');
     };
@@ -22,7 +35,7 @@ const Chat = ({ userName }) => {
       setMessages((messages) => [
         ...messages,
         {
-          message: parseEmojiCodes(data.message),
+          message: data.message, // Already parsed
           userName: data.userName,
         },
       ]);
@@ -30,26 +43,35 @@ const Chat = ({ userName }) => {
   }, []);
 
   const onSend = () => {
-    client.send(
-      JSON.stringify({
-        type: 'message',
-        message: myMessage,
-        userName,
-      }),
-    );
-    setMyMessage('');
+    if (myMessage.trim() !== '') {
+      client.send(
+        JSON.stringify({
+          type: 'message',
+          message: myMessage, // Already parsed
+          userName,
+        }),
+      );
+      setMyMessage('');
+    }
   };
 
   const handleEmojiClick = (emoji) => {
-    setMyMessage(myMessage + emoji.native);
+    const newMessage = myMessage + emoji.native;
+    setMyMessage(newMessage);
   };
 
   const parseEmojiCodes = (text) => {
     const emojiPattern = /:([a-zA-Z0-9_+-]+):/g;
+
+    // Replace shortcodes with emojis
     return text.replace(emojiPattern, (match, emojiCode) => {
-      const emoji = SearchIndex.search(emojiCode)?.[0]?.native;
-      return emoji || match;
+      return emojiMap[emojiCode] || match;
     });
+  };
+
+  const handleInputChange = (e) => {
+    const parsedText = parseEmojiCodes(e.target.value);
+    setMyMessage(parsedText);
   };
 
   return (
@@ -91,7 +113,7 @@ const Chat = ({ userName }) => {
               type="text"
               className="input send__input"
               value={myMessage}
-              onChange={(e) => setMyMessage(e.target.value)}
+              onChange={handleInputChange}
               onKeyUp={(e) => e.key === 'Enter' && onSend()}
               placeholder="Message"
             />
@@ -110,7 +132,8 @@ const Chat = ({ userName }) => {
               data={data}
               onEmojiSelect={handleEmojiClick}
               theme="dark"
-              style={{ position: 'absolute', bottom: '50px', right: '50px' }}
+              previewPosition="top"
+              style={{ position: 'absolute', bottom: '100px', right: '100px' }}
             />
           )}
         </section>
