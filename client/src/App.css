@@ -160,7 +160,7 @@ ul.reset ul li {
 
 .chat em-emoji-picker {
   position: absolute;
-  bottom: 18%; /* Adjust this value to move the picker higher or lower */
-  right: 3%; /* Adjust this value to align picker horizontally */
+  bottom: 18%;
+  right: 3%;
   height: 400px;
 }
