@@ -151,3 +151,11 @@ ul.reset ul li {
 .send__button {
   margin-right: 0;
 }
+
+/*Emoji-picker CSS*/
+
+.emoji-picker {
+  position: absolute;
+  bottom: 55%;
+  left: 55%;
+}
